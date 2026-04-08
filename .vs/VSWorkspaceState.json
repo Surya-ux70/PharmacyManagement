@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\PharmacyManagement.API",
+    "\\PharmacyManagement.API\\Controllers",
+    "\\PharmacyManagement.API\\Data",
+    "\\PharmacyManagement.API\\DTOs",
+    "\\PharmacyManagement.API\\Models"
+  ],
+  "SelectedNode": "\\PharmacyManagement.API\\Controllers\\SalesController.cs",
+  "PreviewInSolutionExplorer": false
+}
