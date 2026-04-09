@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -163,7 +163,8 @@ export class InventoryComponent implements OnInit {
   constructor(
     private api: ApiService,
     private dialog: MatDialog,
-    private snack: MatSnackBar
+    private snack: MatSnackBar,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -172,7 +173,10 @@ export class InventoryComponent implements OnInit {
   }
 
   loadProducts() {
-    this.api.getProducts(this.search, this.selectedCategory).subscribe(p => this.products = p);
+    this.api.getProducts(this.search, this.selectedCategory).subscribe(p => {
+      this.products = p;
+      this.cdr.detectChanges();
+    });
   }
 
   openProductDialog(product?: Product) {

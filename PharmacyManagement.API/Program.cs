@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using PharmacyManagement.API.Data;
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers().AddJsonOptions(o =>
@@ -8,8 +10,10 @@ builder.Services.AddControllers().AddJsonOptions(o =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 builder.Services.AddDbContext<PharmacyDbContext>(options =>
-    options.UseSqlite("Data Source=pharmacy.db"));
+    options.UseNpgsql(connectionString));
 
 builder.Services.AddCors(options =>
     options.AddPolicy("AllowAngular", policy =>
