@@ -1,0 +1,30 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+
+# Visual Studio
+.vs/
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+
+# IDE
+.vscode/
+*.swp
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets
+appsettings.*.local.json

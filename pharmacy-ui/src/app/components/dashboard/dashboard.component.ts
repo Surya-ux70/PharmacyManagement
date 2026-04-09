@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, CurrencyPipe, DecimalPipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -216,22 +216,36 @@ Chart.register(...registerables);
     }
   `]
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, AfterViewChecked {
   data: Dashboard | null = null;
   loading = true;
+  private chartsRendered = false;
   lowStockColumns = ['name', 'category', 'stock', 'reorder'];
 
   @ViewChild('revenueChart') revenueChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('categoryChart') categoryChartRef!: ElementRef<HTMLCanvasElement>;
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
-    this.api.getDashboard().subscribe(data => {
-      this.data = data;
-      this.loading = false;
-      setTimeout(() => this.renderCharts(), 0);
+    this.api.getDashboard().subscribe({
+      next: data => {
+        this.data = data;
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: err => {
+        console.error('Dashboard API error:', err);
+        this.loading = false;
+      }
     });
+  }
+
+  ngAfterViewChecked() {
+    if (this.data && !this.chartsRendered && this.revenueChartRef && this.categoryChartRef) {
+      this.chartsRendered = true;
+      this.renderCharts();
+    }
   }
 
   private renderCharts() {
