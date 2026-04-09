@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: pharmacy-api
+    runtime: docker
+    dockerfilePath: PharmacyManagement.API/Dockerfile
+    dockerContext: PharmacyManagement.API
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: AllowedOrigins__0
+        sync: false

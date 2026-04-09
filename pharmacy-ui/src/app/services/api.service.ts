@@ -7,10 +7,11 @@ import {
   Sale, CreateSale,
   Dashboard, LowStockAlert
 } from '../models/pharmacy.models';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private readonly baseUrl = 'http://localhost:5268/api';
+  private readonly baseUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
