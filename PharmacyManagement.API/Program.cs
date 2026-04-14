@@ -82,30 +82,40 @@ using (var scope = app.Services.CreateScope())
     var db = services.GetRequiredService<PharmacyDbContext>();
 
     // Handle transition from EnsureCreated (no migration history) to Migrate.
-    // If the DB exists but has no __EFMigrationsHistory table, bootstrap it
-    // and mark the initial schema migration as already applied so only the
-    // AddIdentity migration runs against the existing database.
+    // If the DB has existing app tables but no migration history, create the
+    // history table and mark InitialSchema as applied so only AddIdentity runs.
     if (db.Database.CanConnect())
     {
-        try
+        using var conn = db.Database.GetDbConnection();
+        await conn.OpenAsync();
+
+        using var checkCmd = conn.CreateCommand();
+        checkCmd.CommandText = @"
+            SELECT
+                (SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='Products')) AS has_products,
+                (SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='__EFMigrationsHistory')) AS has_history";
+        using var reader = await checkCmd.ExecuteReaderAsync();
+        await reader.ReadAsync();
+        var hasProducts = reader.GetBoolean(0);
+        var hasHistory = reader.GetBoolean(1);
+        await reader.CloseAsync();
+
+        if (hasProducts)
         {
-            var applied = db.Database.GetAppliedMigrations();
-            // Migration history exists — just run pending migrations
-        }
-        catch
-        {
-            // No history table — existing DB created via EnsureCreated
-            db.Database.ExecuteSqlRaw(@"
+            using var createCmd = conn.CreateCommand();
+            createCmd.CommandText = @"
                 CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
                     ""MigrationId"" character varying(150) NOT NULL,
                     ""ProductVersion"" character varying(32) NOT NULL,
                     CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY (""MigrationId"")
-                )");
-            db.Database.ExecuteSqlRaw(@"
+                );
                 INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
                 VALUES ('20260414064740_InitialSchema', '6.0.29')
-                ON CONFLICT DO NOTHING");
+                ON CONFLICT DO NOTHING;";
+            await createCmd.ExecuteNonQueryAsync();
         }
+
+        await conn.CloseAsync();
     }
 
     db.Database.Migrate();
