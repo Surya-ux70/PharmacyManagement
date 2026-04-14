@@ -126,3 +126,28 @@ export interface LowStockAlert {
   reorderLevel: number;
   category: string;
 }
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  fullName: string;
+  email: string;
+  password: string;
+  role: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  expiration: string;
+  user: UserInfo;
+}
+
+export interface UserInfo {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+}

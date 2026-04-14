@@ -6,7 +6,10 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-layout',
@@ -14,7 +17,8 @@ import { ApiService } from '../../services/api.service';
   imports: [
     RouterOutlet, RouterLink, RouterLinkActive,
     MatToolbarModule, MatSidenavModule, MatListModule,
-    MatIconModule, MatButtonModule, MatBadgeModule
+    MatIconModule, MatButtonModule, MatBadgeModule,
+    MatMenuModule, MatDividerModule
   ],
   template: `
     <div class="layout-container">
@@ -33,6 +37,27 @@ import { ApiService } from '../../services/api.service';
             <mat-icon>notifications</mat-icon>
           </button>
         }
+        <button mat-icon-button [matMenuTriggerFor]="userMenu">
+          <mat-icon>account_circle</mat-icon>
+        </button>
+        <mat-menu #userMenu="matMenu">
+          <div class="user-info-menu">
+            <strong>{{ auth.currentUser?.fullName }}</strong>
+            <small>{{ auth.currentUser?.email }}</small>
+            <span class="role-badge">{{ auth.currentUser?.role }}</span>
+          </div>
+          <mat-divider></mat-divider>
+          @if (auth.isAdmin()) {
+            <button mat-menu-item routerLink="/register">
+              <mat-icon>person_add</mat-icon>
+              <span>Register User</span>
+            </button>
+          }
+          <button mat-menu-item (click)="auth.logout()">
+            <mat-icon>logout</mat-icon>
+            <span>Sign Out</span>
+          </button>
+        </mat-menu>
       </mat-toolbar>
 
       <mat-sidenav-container class="sidenav-container">
@@ -54,6 +79,13 @@ import { ApiService } from '../../services/api.service';
               <mat-icon matListItemIcon>point_of_sale</mat-icon>
               <span matListItemTitle>Sales</span>
             </a>
+            @if (auth.isAdmin()) {
+              <mat-divider></mat-divider>
+              <a mat-list-item routerLink="/register" routerLinkActive="active-link">
+                <mat-icon matListItemIcon>person_add</mat-icon>
+                <span matListItemTitle>Register User</span>
+              </a>
+            }
           </mat-nav-list>
         </mat-sidenav>
         <mat-sidenav-content class="content">
@@ -99,12 +131,33 @@ import { ApiService } from '../../services/api.service';
       background: rgba(63, 81, 181, 0.08) !important;
       color: #3f51b5;
     }
+    .user-info-menu {
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px;
+      gap: 2px;
+    }
+    .user-info-menu small {
+      color: rgba(0, 0, 0, 0.54);
+      font-size: 12px;
+    }
+    .role-badge {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 2px 8px;
+      background: #e8eaf6;
+      color: #3f51b5;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+      width: fit-content;
+    }
   `]
 })
 export class LayoutComponent {
   lowStockCount = 0;
 
-  constructor(private api: ApiService) {
+  constructor(public auth: AuthService, private api: ApiService) {
     this.api.getLowStockAlerts().subscribe(alerts => {
       this.lowStockCount = alerts.length;
     });
