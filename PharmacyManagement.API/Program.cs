@@ -80,7 +80,35 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var db = services.GetRequiredService<PharmacyDbContext>();
-    db.Database.EnsureCreated();
+
+    // Handle transition from EnsureCreated (no migration history) to Migrate.
+    // If the DB exists but has no __EFMigrationsHistory table, bootstrap it
+    // and mark the initial schema migration as already applied so only the
+    // AddIdentity migration runs against the existing database.
+    if (db.Database.CanConnect())
+    {
+        try
+        {
+            var applied = db.Database.GetAppliedMigrations();
+            // Migration history exists — just run pending migrations
+        }
+        catch
+        {
+            // No history table — existing DB created via EnsureCreated
+            db.Database.ExecuteSqlRaw(@"
+                CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
+                    ""MigrationId"" character varying(150) NOT NULL,
+                    ""ProductVersion"" character varying(32) NOT NULL,
+                    CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY (""MigrationId"")
+                )");
+            db.Database.ExecuteSqlRaw(@"
+                INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+                VALUES ('20260414064740_InitialSchema', '6.0.29')
+                ON CONFLICT DO NOTHING");
+        }
+    }
+
+    db.Database.Migrate();
 
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
