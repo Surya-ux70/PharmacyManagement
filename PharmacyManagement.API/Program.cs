@@ -86,36 +86,20 @@ using (var scope = app.Services.CreateScope())
     // history table and mark InitialSchema as applied so only AddIdentity runs.
     if (db.Database.CanConnect())
     {
-        using var conn = db.Database.GetDbConnection();
-        await conn.OpenAsync();
-
-        using var checkCmd = conn.CreateCommand();
-        checkCmd.CommandText = @"
-            SELECT
-                (SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='Products')) AS has_products,
-                (SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='__EFMigrationsHistory')) AS has_history";
-        using var reader = await checkCmd.ExecuteReaderAsync();
-        await reader.ReadAsync();
-        var hasProducts = reader.GetBoolean(0);
-        var hasHistory = reader.GetBoolean(1);
-        await reader.CloseAsync();
-
-        if (hasProducts)
-        {
-            using var createCmd = conn.CreateCommand();
-            createCmd.CommandText = @"
-                CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
-                    ""MigrationId"" character varying(150) NOT NULL,
-                    ""ProductVersion"" character varying(32) NOT NULL,
-                    CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY (""MigrationId"")
-                );
-                INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
-                VALUES ('20260414064740_InitialSchema', '6.0.29')
-                ON CONFLICT DO NOTHING;";
-            await createCmd.ExecuteNonQueryAsync();
-        }
-
-        await conn.CloseAsync();
+        db.Database.ExecuteSqlRaw(@"
+            DO $$
+            BEGIN
+                IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='Products') THEN
+                    CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
+                        ""MigrationId"" character varying(150) NOT NULL,
+                        ""ProductVersion"" character varying(32) NOT NULL,
+                        CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY (""MigrationId"")
+                    );
+                    INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+                    VALUES ('20260414064740_InitialSchema', '6.0.29')
+                    ON CONFLICT DO NOTHING;
+                END IF;
+            END $$;");
     }
 
     db.Database.Migrate();
