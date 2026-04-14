@@ -12,6 +12,22 @@ public record RegisterDto(
     [Required][MinLength(6)] string Password,
     [Required] string Role);
 
+public record SignUpDto(
+    [Required] string FullName,
+    [Required][EmailAddress] string Email,
+    [Required][MinLength(6)] string Password);
+
+public record GoogleSignInDto(
+    [Required] string IdToken);
+
+public record ForgotPasswordDto(
+    [Required][EmailAddress] string Email);
+
+public record ResetPasswordDto(
+    [Required] string Email,
+    [Required] string Token,
+    [Required][MinLength(6)] string NewPassword);
+
 public record AuthResponseDto(
     string Token,
     DateTime Expiration,

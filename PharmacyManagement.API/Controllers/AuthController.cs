@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,11 +17,16 @@ public class AuthController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthController> _logger;
 
-    public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration)
+    public AuthController(
+        UserManager<ApplicationUser> userManager,
+        IConfiguration configuration,
+        ILogger<AuthController> logger)
     {
         _userManager = userManager;
         _configuration = configuration;
+        _logger = logger;
     }
 
     [HttpPost("login")]
@@ -37,6 +43,115 @@ public class AuthController : ControllerBase
             token.Token,
             token.Expiration,
             new UserDto(user.Id, user.FullName, user.Email!, roles.FirstOrDefault() ?? ""));
+    }
+
+    [HttpPost("signup")]
+    public async Task<ActionResult<AuthResponseDto>> SignUp(SignUpDto dto)
+    {
+        var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+        if (existingUser != null)
+            return Conflict(new { message = "A user with this email already exists." });
+
+        var user = new ApplicationUser
+        {
+            UserName = dto.Email,
+            Email = dto.Email,
+            FullName = dto.FullName,
+            EmailConfirmed = true
+        };
+
+        var result = await _userManager.CreateAsync(user, dto.Password);
+        if (!result.Succeeded)
+            return BadRequest(new { message = "Registration failed.", errors = result.Errors.Select(e => e.Description) });
+
+        await _userManager.AddToRoleAsync(user, "Pharmacist");
+
+        var roles = await _userManager.GetRolesAsync(user);
+        var token = GenerateJwtToken(user, roles);
+
+        return CreatedAtAction(nameof(GetCurrentUser), null, new AuthResponseDto(
+            token.Token,
+            token.Expiration,
+            new UserDto(user.Id, user.FullName, user.Email!, roles.FirstOrDefault() ?? "")));
+    }
+
+    [HttpPost("google")]
+    public async Task<ActionResult<AuthResponseDto>> GoogleSignIn(GoogleSignInDto dto)
+    {
+        var googleClientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID")
+            ?? _configuration["Google:ClientId"];
+
+        if (string.IsNullOrEmpty(googleClientId))
+            return StatusCode(500, new { message = "Google sign-in is not configured." });
+
+        GoogleJsonWebSignature.Payload payload;
+        try
+        {
+            payload = await GoogleJsonWebSignature.ValidateAsync(dto.IdToken, new GoogleJsonWebSignature.ValidationSettings
+            {
+                Audience = new[] { googleClientId }
+            });
+        }
+        catch (InvalidJwtException)
+        {
+            return Unauthorized(new { message = "Invalid Google token." });
+        }
+
+        var user = await _userManager.FindByEmailAsync(payload.Email);
+
+        if (user == null)
+        {
+            user = new ApplicationUser
+            {
+                UserName = payload.Email,
+                Email = payload.Email,
+                FullName = payload.Name ?? payload.Email,
+                EmailConfirmed = true
+            };
+
+            var result = await _userManager.CreateAsync(user);
+            if (!result.Succeeded)
+                return BadRequest(new { message = "Account creation failed.", errors = result.Errors.Select(e => e.Description) });
+
+            await _userManager.AddToRoleAsync(user, "Pharmacist");
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+        var token = GenerateJwtToken(user, roles);
+
+        return new AuthResponseDto(
+            token.Token,
+            token.Expiration,
+            new UserDto(user.Id, user.FullName, user.Email!, roles.FirstOrDefault() ?? ""));
+    }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
+    {
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+        if (user == null)
+            return Ok(new { message = "If the email exists, a reset link has been sent." });
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        // TODO: Send this token via email. For now, log it in development.
+        _logger.LogInformation("Password reset token for {Email}: {Token}", dto.Email, token);
+
+        return Ok(new { message = "If the email exists, a reset link has been sent." });
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
+    {
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+        if (user == null)
+            return BadRequest(new { message = "Invalid reset request." });
+
+        var result = await _userManager.ResetPasswordAsync(user, dto.Token, dto.NewPassword);
+        if (!result.Succeeded)
+            return BadRequest(new { message = "Password reset failed.", errors = result.Errors.Select(e => e.Description) });
+
+        return Ok(new { message = "Password has been reset successfully." });
     }
 
     [HttpPost("register")]
