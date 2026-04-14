@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PharmacyManagement.API.Models;
 
 namespace PharmacyManagement.API.Data;
 
-public class PharmacyDbContext : DbContext
+public class PharmacyDbContext : IdentityDbContext<ApplicationUser>
 {
     public PharmacyDbContext(DbContextOptions<PharmacyDbContext> options) : base(options) { }
 
@@ -14,6 +15,8 @@ public class PharmacyDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<Product>(e =>
         {
             e.HasIndex(p => p.Name);
