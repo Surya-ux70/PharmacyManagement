@@ -10,3 +10,5 @@ services:
         sync: false
       - key: AllowedOrigins__0
         sync: false
+      - key: JWT_KEY
+        sync: false
