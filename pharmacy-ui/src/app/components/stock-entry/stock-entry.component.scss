@@ -1,0 +1,21 @@
+.page-title { margin: 0 0 24px; font-weight: 500; color: #333; }
+.content-grid {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 16px;
+}
+.form-stack mat-form-field { width: 100%; }
+.row { display: flex; gap: 16px; }
+.row mat-form-field { flex: 1; }
+.entries-table { width: 100%; }
+.qty { color: #43a047; font-weight: 600; }
+@media (max-width: 900px) {
+  .content-grid { grid-template-columns: 1fr; }
+}

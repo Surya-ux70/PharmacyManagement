@@ -1,0 +1,65 @@
+<div class="login-wrapper">
+  <mat-card class="login-card">
+    <mat-card-header>
+      <div class="header-content">
+        <mat-icon class="brand-icon">local_pharmacy</mat-icon>
+        <mat-card-title>PharmaCare Manager</mat-card-title>
+        <mat-card-subtitle>Sign in to your account</mat-card-subtitle>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (errorMessage) {
+        <div class="error-banner">
+          <mat-icon>error_outline</mat-icon>
+          {{ errorMessage }}
+        </div>
+      }
+
+      <div id="google-signin-btn" class="google-btn-container"></div>
+
+      <div class="divider-row">
+        <mat-divider></mat-divider>
+        <span class="divider-text">or sign in with email</span>
+        <mat-divider></mat-divider>
+      </div>
+
+      <form (ngSubmit)="onLogin()" #loginForm="ngForm">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" name="email" [(ngModel)]="email"
+                 required email placeholder="admin@pharmacare.com">
+          <mat-icon matPrefix>email</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input matInput [type]="hidePassword ? 'password' : 'text'"
+                 name="password" [(ngModel)]="password" required>
+          <mat-icon matPrefix>lock</mat-icon>
+          <button mat-icon-button matSuffix type="button"
+                  (click)="hidePassword = !hidePassword">
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </mat-form-field>
+
+        <div class="forgot-link">
+          <a routerLink="/forgot-password">Forgot password?</a>
+        </div>
+
+        <button mat-raised-button color="primary" type="submit"
+                class="full-width login-btn" [disabled]="loading || !loginForm.valid">
+          @if (loading) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            Sign In
+          }
+        </button>
+      </form>
+
+      <p class="footer-text">
+        Don't have an account? <a routerLink="/signup">Sign up</a>
+      </p>
+    </mat-card-content>
+  </mat-card>
+</div>
