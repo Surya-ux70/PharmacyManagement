@@ -14,20 +14,20 @@ import { environment } from '../../../environments/environment';
 declare const google: any;
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-signup',
   standalone: true,
   imports: [
     FormsModule, RouterLink, MatCardModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatDividerModule
   ],
   template: `
-    <div class="login-wrapper">
-      <mat-card class="login-card">
+    <div class="signup-wrapper">
+      <mat-card class="signup-card">
         <mat-card-header>
           <div class="header-content">
             <mat-icon class="brand-icon">local_pharmacy</mat-icon>
-            <mat-card-title>PharmaCare Manager</mat-card-title>
-            <mat-card-subtitle>Sign in to your account</mat-card-subtitle>
+            <mat-card-title>Create Account</mat-card-title>
+            <mat-card-subtitle>Join PharmaCare Manager</mat-card-subtitle>
           </div>
         </mat-card-header>
 
@@ -39,63 +39,65 @@ declare const google: any;
             </div>
           }
 
-          <div id="google-signin-btn" class="google-btn-container"></div>
+          <div id="google-signup-btn" class="google-btn-container"></div>
 
           <div class="divider-row">
             <mat-divider></mat-divider>
-            <span class="divider-text">or sign in with email</span>
+            <span class="divider-text">or sign up with email</span>
             <mat-divider></mat-divider>
           </div>
 
-          <form (ngSubmit)="onLogin()" #loginForm="ngForm">
+          <form (ngSubmit)="onSignUp()" #signupForm="ngForm">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Full Name</mat-label>
+              <input matInput name="fullName" [(ngModel)]="fullName" required>
+              <mat-icon matPrefix>person</mat-icon>
+            </mat-form-field>
+
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Email</mat-label>
-              <input matInput type="email" name="email" [(ngModel)]="email"
-                     required email placeholder="admin@pharmacare.com">
+              <input matInput type="email" name="email" [(ngModel)]="email" required email>
               <mat-icon matPrefix>email</mat-icon>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Password</mat-label>
               <input matInput [type]="hidePassword ? 'password' : 'text'"
-                     name="password" [(ngModel)]="password" required>
+                     name="password" [(ngModel)]="password" required minlength="6">
               <mat-icon matPrefix>lock</mat-icon>
               <button mat-icon-button matSuffix type="button"
                       (click)="hidePassword = !hidePassword">
                 <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
+              <mat-hint>Min 6 chars, uppercase, lowercase, and digit</mat-hint>
             </mat-form-field>
 
-            <div class="forgot-link">
-              <a routerLink="/forgot-password">Forgot password?</a>
-            </div>
-
             <button mat-raised-button color="primary" type="submit"
-                    class="full-width login-btn" [disabled]="loading || !loginForm.valid">
+                    class="full-width signup-btn" [disabled]="loading || !signupForm.valid">
               @if (loading) {
                 <mat-spinner diameter="20"></mat-spinner>
               } @else {
-                Sign In
+                Create Account
               }
             </button>
           </form>
 
           <p class="footer-text">
-            Don't have an account? <a routerLink="/signup">Sign up</a>
+            Already have an account? <a routerLink="/login">Sign in</a>
           </p>
         </mat-card-content>
       </mat-card>
     </div>
   `,
   styles: [`
-    .login-wrapper {
+    .signup-wrapper {
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
-    .login-card {
+    .signup-card {
       width: 100%;
       max-width: 420px;
       padding: 32px;
@@ -118,7 +120,7 @@ declare const google: any;
     mat-card-title { font-size: 24px !important; text-align: center; }
     mat-card-subtitle { text-align: center; margin-top: 4px; }
     .full-width { width: 100%; }
-    .login-btn {
+    .signup-btn {
       height: 48px;
       font-size: 16px;
       margin-top: 8px;
@@ -151,15 +153,6 @@ declare const google: any;
       font-size: 13px;
       white-space: nowrap;
     }
-    .forgot-link {
-      text-align: right;
-      margin: -8px 0 8px;
-    }
-    .forgot-link a {
-      color: #3f51b5;
-      text-decoration: none;
-      font-size: 13px;
-    }
     .footer-text {
       text-align: center;
       margin-top: 16px;
@@ -169,7 +162,8 @@ declare const google: any;
     mat-card-header { display: flex; justify-content: center; }
   `]
 })
-export class LoginComponent {
+export class SignUpComponent {
+  fullName = '';
   email = '';
   password = '';
   hidePassword = true;
@@ -193,8 +187,8 @@ export class LoginComponent {
         callback: (response: any) => this.handleGoogleSignIn(response)
       });
       google.accounts.id.renderButton(
-        document.getElementById('google-signin-btn'),
-        { theme: 'outline', size: 'large', width: 356, text: 'signin_with' }
+        document.getElementById('google-signup-btn'),
+        { theme: 'outline', size: 'large', width: 356, text: 'signup_with' }
       );
     }
   }
@@ -213,17 +207,20 @@ export class LoginComponent {
     });
   }
 
-  onLogin(): void {
+  onSignUp(): void {
     this.loading = true;
     this.errorMessage = '';
 
-    this.auth.login({ email: this.email, password: this.password }).subscribe({
-      next: () => {
-        this.router.navigate(['/dashboard']);
-      },
+    this.auth.signUp({
+      fullName: this.fullName,
+      email: this.email,
+      password: this.password
+    }).subscribe({
+      next: () => this.router.navigate(['/dashboard']),
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.message || 'Login failed. Please try again.';
+        const errors = err.error?.errors;
+        this.errorMessage = errors ? errors.join(' ') : (err.error?.message || 'Sign up failed.');
       }
     });
   }

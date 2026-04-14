@@ -8,6 +8,14 @@ export const routes: Routes = [
     loadComponent: () => import('./components/login/login.component').then(m => m.LoginComponent)
   },
   {
+    path: 'signup',
+    loadComponent: () => import('./components/signup/signup.component').then(m => m.SignUpComponent)
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () => import('./components/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+  },
+  {
     path: '',
     component: LayoutComponent,
     canActivate: [authGuard],
