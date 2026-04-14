@@ -1,0 +1,67 @@
+<div class="signup-wrapper">
+  <mat-card class="signup-card">
+    <mat-card-header>
+      <div class="header-content">
+        <mat-icon class="brand-icon">local_pharmacy</mat-icon>
+        <mat-card-title>Create Account</mat-card-title>
+        <mat-card-subtitle>Join PharmaCare Manager</mat-card-subtitle>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (errorMessage) {
+        <div class="error-banner">
+          <mat-icon>error_outline</mat-icon>
+          {{ errorMessage }}
+        </div>
+      }
+
+      <div id="google-signup-btn" class="google-btn-container"></div>
+
+      <div class="divider-row">
+        <mat-divider></mat-divider>
+        <span class="divider-text">or sign up with email</span>
+        <mat-divider></mat-divider>
+      </div>
+
+      <form (ngSubmit)="onSignUp()" #signupForm="ngForm">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Full Name</mat-label>
+          <input matInput name="fullName" [(ngModel)]="fullName" required>
+          <mat-icon matPrefix>person</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" name="email" [(ngModel)]="email" required email>
+          <mat-icon matPrefix>email</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input matInput [type]="hidePassword ? 'password' : 'text'"
+                 name="password" [(ngModel)]="password" required minlength="6">
+          <mat-icon matPrefix>lock</mat-icon>
+          <button mat-icon-button matSuffix type="button"
+                  (click)="hidePassword = !hidePassword">
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-hint>Min 6 chars, uppercase, lowercase, and digit</mat-hint>
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit"
+                class="full-width signup-btn" [disabled]="loading || !signupForm.valid">
+          @if (loading) {
+            <mat-spinner diameter="20"></mat-spinner>
+          } @else {
+            Create Account
+          }
+        </button>
+      </form>
+
+      <p class="footer-text">
+        Already have an account? <a routerLink="/login">Sign in</a>
+      </p>
+    </mat-card-content>
+  </mat-card>
+</div>

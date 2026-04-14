@@ -1,0 +1,30 @@
+.register-container {
+  max-width: 520px;
+  margin: 0 auto;
+}
+.register-card {
+  padding: 24px;
+  border-radius: 12px;
+}
+.title-icon {
+  vertical-align: middle;
+  margin-right: 8px;
+}
+.full-width { width: 100%; }
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fdecea;
+  color: #d32f2f;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
