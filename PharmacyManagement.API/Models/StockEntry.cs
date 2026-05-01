@@ -25,4 +25,7 @@ public class StockEntry
 
     [MaxLength(500)]
     public string Notes { get; set; } = string.Empty;
+
+    public int TenantId { get; set; }
+    public Tenant Tenant { get; set; } = null!;
 }

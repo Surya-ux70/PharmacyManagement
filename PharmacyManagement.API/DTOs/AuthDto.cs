@@ -17,6 +17,12 @@ public record SignUpDto(
     [Required][EmailAddress] string Email,
     [Required][MinLength(6)] string Password);
 
+public record RegisterTenantDto(
+    [Required] string PharmacyName,
+    [Required] string FullName,
+    [Required][EmailAddress] string Email,
+    [Required][MinLength(6)] string Password);
+
 public record GoogleSignInDto(
     [Required] string IdToken);
 
@@ -37,4 +43,23 @@ public record UserDto(
     string Id,
     string FullName,
     string Email,
-    string Role);
+    string Role,
+    int? TenantId,
+    string? TenantName);
+
+public record TenantDto(
+    int Id,
+    string Name,
+    string Slug,
+    bool IsActive,
+    DateTime CreatedAt);
+
+public record CreateTenantDto(
+    [Required] string Name,
+    [Required] string AdminFullName,
+    [Required][EmailAddress] string AdminEmail,
+    [Required][MinLength(6)] string AdminPassword);
+
+public record UpdateTenantDto(
+    [Required] string Name,
+    bool IsActive);

@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { LayoutComponent } from './components/layout/layout.component';
-import { authGuard, adminGuard } from './services/auth.guard';
+import { authGuard, adminGuard, superAdminGuard } from './services/auth.guard';
 
 export const routes: Routes = [
   {
@@ -10,6 +10,10 @@ export const routes: Routes = [
   {
     path: 'signup',
     loadComponent: () => import('./components/signup/signup.component').then(m => m.SignUpComponent)
+  },
+  {
+    path: 'register-pharmacy',
+    loadComponent: () => import('./components/register-tenant/register-tenant.component').then(m => m.RegisterTenantComponent)
   },
   {
     path: 'forgot-password',
@@ -29,6 +33,11 @@ export const routes: Routes = [
         path: 'register',
         loadComponent: () => import('./components/register/register.component').then(m => m.RegisterComponent),
         canActivate: [adminGuard]
+      },
+      {
+        path: 'tenants',
+        loadComponent: () => import('./components/tenants/tenants.component').then(m => m.TenantsComponent),
+        canActivate: [superAdminGuard]
       },
     ]
   },

@@ -1,0 +1,113 @@
+<div class="tenants-container">
+  <div class="page-header">
+    <h2>Tenant Management</h2>
+    <button mat-raised-button color="primary" (click)="showCreateForm = !showCreateForm">
+      <mat-icon>add_business</mat-icon>
+      {{ showCreateForm ? 'Cancel' : 'Add Pharmacy' }}
+    </button>
+  </div>
+
+  @if (showCreateForm) {
+    <mat-card class="create-card">
+      <mat-card-header>
+        <mat-card-title>Register New Pharmacy</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (errorMessage) {
+          <div class="error-banner">
+            <mat-icon>error_outline</mat-icon>
+            {{ errorMessage }}
+          </div>
+        }
+        <form (ngSubmit)="onCreate()" #createForm="ngForm" class="create-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Pharmacy Name</mat-label>
+            <input matInput name="name" [(ngModel)]="newTenant.name" required>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Admin Full Name</mat-label>
+            <input matInput name="adminFullName" [(ngModel)]="newTenant.adminFullName" required>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Admin Email</mat-label>
+            <input matInput type="email" name="adminEmail" [(ngModel)]="newTenant.adminEmail" required email>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Admin Password</mat-label>
+            <input matInput type="password" name="adminPassword" [(ngModel)]="newTenant.adminPassword" required minlength="6">
+          </mat-form-field>
+          <button mat-raised-button color="primary" type="submit"
+                  [disabled]="creating || !createForm.valid">
+            @if (creating) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              Create Pharmacy
+            }
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (loading) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+    </div>
+  } @else {
+    <mat-card>
+      <table mat-table [dataSource]="tenants" class="full-width">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>ID</th>
+          <td mat-cell *matCellDef="let t">{{ t.id }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Pharmacy Name</th>
+          <td mat-cell *matCellDef="let t">{{ t.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="slug">
+          <th mat-header-cell *matHeaderCellDef>Slug</th>
+          <td mat-cell *matCellDef="let t">{{ t.slug }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="isActive">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let t">
+            <mat-chip-set>
+              <mat-chip [class.active-chip]="t.isActive" [class.inactive-chip]="!t.isActive">
+                {{ t.isActive ? 'Active' : 'Inactive' }}
+              </mat-chip>
+            </mat-chip-set>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef>Created</th>
+          <td mat-cell *matCellDef="let t">{{ t.createdAt | date:'mediumDate' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let t">
+            <button mat-icon-button [color]="t.isActive ? 'warn' : 'primary'"
+                    (click)="toggleActive(t)"
+                    [matTooltip]="t.isActive ? 'Deactivate' : 'Activate'">
+              <mat-icon>{{ t.isActive ? 'block' : 'check_circle' }}</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      @if (tenants.length === 0) {
+        <div class="empty-state">
+          <mat-icon>business</mat-icon>
+          <p>No pharmacies registered yet.</p>
+        </div>
+      }
+    </mat-card>
+  }
+</div>

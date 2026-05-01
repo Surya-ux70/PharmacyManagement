@@ -17,4 +17,7 @@ public class SaleItem
     public decimal CostPrice { get; set; }
 
     public decimal SubTotal { get; set; }
+
+    public int TenantId { get; set; }
+    public Tenant Tenant { get; set; } = null!;
 }

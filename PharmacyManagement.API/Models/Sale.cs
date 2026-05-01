@@ -18,5 +18,8 @@ public class Sale
 
     public decimal TotalCost { get; set; }
 
+    public int TenantId { get; set; }
+    public Tenant Tenant { get; set; } = null!;
+
     public ICollection<SaleItem> Items { get; set; } = new List<SaleItem>();
 }
