@@ -103,14 +103,32 @@ public class PharmacyDbContext : IdentityDbContext<ApplicationUser>
 
     private void SetTenantId()
     {
-        if (_tenantId == null) return;
+        var addedEntries = ChangeTracker.Entries()
+            .Where(e => e.State == EntityState.Added)
+            .ToList();
 
-        foreach (var entry in ChangeTracker.Entries().Where(e => e.State == EntityState.Added))
+        foreach (var entry in addedEntries)
         {
-            if (entry.Entity is Product p && p.TenantId == 0) p.TenantId = _tenantId.Value;
-            else if (entry.Entity is Sale s && s.TenantId == 0) s.TenantId = _tenantId.Value;
-            else if (entry.Entity is SaleItem si && si.TenantId == 0) si.TenantId = _tenantId.Value;
-            else if (entry.Entity is StockEntry se && se.TenantId == 0) se.TenantId = _tenantId.Value;
+            if (entry.Entity is Product p && p.TenantId == 0)
+            {
+                if (_tenantId == null) throw new InvalidOperationException("A tenant context is required to create products. Please register or join a pharmacy first.");
+                p.TenantId = _tenantId.Value;
+            }
+            else if (entry.Entity is Sale s && s.TenantId == 0)
+            {
+                if (_tenantId == null) throw new InvalidOperationException("A tenant context is required to create sales. Please register or join a pharmacy first.");
+                s.TenantId = _tenantId.Value;
+            }
+            else if (entry.Entity is SaleItem si && si.TenantId == 0)
+            {
+                if (_tenantId == null) throw new InvalidOperationException("A tenant context is required to create sales.");
+                si.TenantId = _tenantId.Value;
+            }
+            else if (entry.Entity is StockEntry se && se.TenantId == 0)
+            {
+                if (_tenantId == null) throw new InvalidOperationException("A tenant context is required to create stock entries. Please register or join a pharmacy first.");
+                se.TenantId = _tenantId.Value;
+            }
         }
     }
 }

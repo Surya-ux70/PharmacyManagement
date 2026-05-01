@@ -156,6 +156,21 @@ var port = Environment.GetEnvironmentVariable("PORT") ?? "5268";
 app.Urls.Add($"http://0.0.0.0:{port}");
 
 app.UseCors("AllowAngular");
+
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (InvalidOperationException ex) when (ex.Message.Contains("tenant context"))
+    {
+        context.Response.StatusCode = 403;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new { message = ex.Message });
+    }
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
