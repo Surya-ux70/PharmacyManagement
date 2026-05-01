@@ -139,6 +139,13 @@ export interface RegisterRequest {
   role: string;
 }
 
+export interface RegisterTenantRequest {
+  pharmacyName: string;
+  fullName: string;
+  email: string;
+  password: string;
+}
+
 export interface AuthResponse {
   token: string;
   expiration: string;
@@ -150,4 +157,14 @@ export interface UserInfo {
   fullName: string;
   email: string;
   role: string;
+  tenantId: number | null;
+  tenantName: string | null;
+}
+
+export interface Tenant {
+  id: number;
+  name: string;
+  slug: string;
+  isActive: boolean;
+  createdAt: string;
 }

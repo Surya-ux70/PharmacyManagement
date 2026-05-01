@@ -37,6 +37,9 @@ public class Product
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    public int TenantId { get; set; }
+    public Tenant Tenant { get; set; } = null!;
+
     public ICollection<StockEntry> StockEntries { get; set; } = new List<StockEntry>();
     public ICollection<SaleItem> SaleItems { get; set; } = new List<SaleItem>();
 }

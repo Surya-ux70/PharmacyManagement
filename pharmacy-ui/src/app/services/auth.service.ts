@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
-import { AuthResponse, LoginRequest, RegisterRequest, UserInfo } from '../models/pharmacy.models';
+import { AuthResponse, LoginRequest, RegisterRequest, RegisterTenantRequest, UserInfo } from '../models/pharmacy.models';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -30,6 +30,12 @@ export class AuthService {
 
   googleSignIn(idToken: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.baseUrl}/auth/google`, { idToken }).pipe(
+      tap(response => this.storeAuth(response))
+    );
+  }
+
+  registerTenant(request: RegisterTenantRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/register-tenant`, request).pipe(
       tap(response => this.storeAuth(response))
     );
   }
@@ -67,6 +73,18 @@ export class AuthService {
 
   isAdmin(): boolean {
     return this.currentUser?.role === 'Admin';
+  }
+
+  isSuperAdmin(): boolean {
+    return this.currentUser?.role === 'SuperAdmin';
+  }
+
+  hasTenant(): boolean {
+    return this.currentUser?.tenantId != null;
+  }
+
+  get tenantName(): string | null {
+    return this.currentUser?.tenantName ?? null;
   }
 
   private storeAuth(response: AuthResponse): void {

@@ -1,0 +1,53 @@
+.register-tenant-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+.register-tenant-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 32px;
+  border-radius: 16px;
+}
+.header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 24px;
+}
+.brand-icon {
+  font-size: 48px;
+  height: 48px;
+  width: 48px;
+  color: #11998e;
+  margin-bottom: 8px;
+}
+mat-card-title { font-size: 24px !important; text-align: center; }
+mat-card-subtitle { text-align: center; margin-top: 4px; }
+.full-width { width: 100%; }
+.register-btn {
+  height: 48px;
+  font-size: 16px;
+  margin-top: 8px;
+}
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fdecea;
+  color: #d32f2f;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+.footer-text {
+  text-align: center;
+  margin-top: 16px;
+  color: rgba(0, 0, 0, 0.6);
+}
+.footer-text a { color: #11998e; text-decoration: none; font-weight: 500; }
+mat-card-header { display: flex; justify-content: center; }

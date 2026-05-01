@@ -5,7 +5,11 @@
     </button>
     <span class="brand">
       <mat-icon class="brand-icon">local_pharmacy</mat-icon>
-      PharmaCare Manager
+      @if (auth.tenantName) {
+        {{ auth.tenantName }}
+      } @else {
+        PharmaCare Manager
+      }
     </span>
     <span class="spacer"></span>
     @if (lowStockCount > 0) {
@@ -22,12 +26,21 @@
         <strong>{{ auth.currentUser?.fullName }}</strong>
         <small>{{ auth.currentUser?.email }}</small>
         <span class="role-badge">{{ auth.currentUser?.role }}</span>
+        @if (auth.tenantName) {
+          <small class="tenant-badge">{{ auth.tenantName }}</small>
+        }
       </div>
       <mat-divider></mat-divider>
       @if (auth.isAdmin()) {
         <button mat-menu-item routerLink="/register">
           <mat-icon>person_add</mat-icon>
           <span>Register User</span>
+        </button>
+      }
+      @if (auth.isSuperAdmin()) {
+        <button mat-menu-item routerLink="/tenants">
+          <mat-icon>business</mat-icon>
+          <span>Manage Tenants</span>
         </button>
       }
       <button mat-menu-item (click)="auth.logout()">
@@ -61,6 +74,13 @@
           <a mat-list-item routerLink="/register" routerLinkActive="active-link">
             <mat-icon matListItemIcon>person_add</mat-icon>
             <span matListItemTitle>Register User</span>
+          </a>
+        }
+        @if (auth.isSuperAdmin()) {
+          <mat-divider></mat-divider>
+          <a mat-list-item routerLink="/tenants" routerLinkActive="active-link">
+            <mat-icon matListItemIcon>business</mat-icon>
+            <span matListItemTitle>Manage Tenants</span>
           </a>
         }
       </mat-nav-list>

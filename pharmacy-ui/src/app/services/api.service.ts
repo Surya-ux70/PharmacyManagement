@@ -5,7 +5,7 @@ import {
   Product, CreateProduct, UpdateProduct,
   StockEntry, CreateStockEntry,
   Sale, CreateSale,
-  Dashboard, LowStockAlert
+  Dashboard, LowStockAlert, Tenant
 } from '../models/pharmacy.models';
 import { environment } from '../../environments/environment';
 
@@ -72,5 +72,18 @@ export class ApiService {
   // Dashboard
   getDashboard(): Observable<Dashboard> {
     return this.http.get<Dashboard>(`${this.baseUrl}/dashboard`);
+  }
+
+  // Tenants (SuperAdmin)
+  getTenants(): Observable<Tenant[]> {
+    return this.http.get<Tenant[]>(`${this.baseUrl}/tenants`);
+  }
+
+  createTenant(data: { name: string; adminFullName: string; adminEmail: string; adminPassword: string }): Observable<Tenant> {
+    return this.http.post<Tenant>(`${this.baseUrl}/tenants`, data);
+  }
+
+  updateTenant(id: number, data: { name: string; isActive: boolean }): Observable<Tenant> {
+    return this.http.put<Tenant>(`${this.baseUrl}/tenants/${id}`, data);
   }
 }

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PharmacyManagement.API.Data;
 using PharmacyManagement.API.Models;
+using PharmacyManagement.API.Services;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
@@ -14,6 +15,9 @@ builder.Services.AddControllers().AddJsonOptions(o =>
     o.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ITenantService, TenantService>();
 
 var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
     ?? builder.Configuration.GetConnectionString("DefaultConnection")
@@ -81,9 +85,6 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var db = services.GetRequiredService<PharmacyDbContext>();
 
-    // Handle transition from EnsureCreated (no migration history) to Migrate.
-    // If the DB has existing app tables but no migration history, create the
-    // history table and mark InitialSchema as applied so only AddIdentity runs.
     if (db.Database.CanConnect())
     {
         db.Database.ExecuteSqlRaw(@"
@@ -98,6 +99,9 @@ using (var scope = app.Services.CreateScope())
                     INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
                     VALUES ('20260414064740_InitialSchema', '6.0.29')
                     ON CONFLICT DO NOTHING;
+                    INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+                    VALUES ('20260414064801_AddIdentity', '6.0.29')
+                    ON CONFLICT DO NOTHING;
                 END IF;
             END $$;");
     }
@@ -107,28 +111,38 @@ using (var scope = app.Services.CreateScope())
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
-    string[] roles = { "Admin", "Pharmacist" };
+    string[] roles = { "SuperAdmin", "Admin", "Pharmacist" };
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))
             await roleManager.CreateAsync(new IdentityRole(role));
     }
 
-    var adminEmail = Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? "admin@pharmacare.com";
-    var adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "Admin@123";
+    var superAdminEmail = Environment.GetEnvironmentVariable("SUPERADMIN_EMAIL") ?? "superadmin@pharmacare.com";
+    var superAdminPassword = Environment.GetEnvironmentVariable("SUPERADMIN_PASSWORD") ?? "Super@123";
 
-    if (await userManager.FindByEmailAsync(adminEmail) == null)
+    if (await userManager.FindByEmailAsync(superAdminEmail) == null)
     {
-        var admin = new ApplicationUser
+        var superAdmin = new ApplicationUser
         {
-            UserName = adminEmail,
-            Email = adminEmail,
-            FullName = "System Administrator",
-            EmailConfirmed = true
+            UserName = superAdminEmail,
+            Email = superAdminEmail,
+            FullName = "PharmaCare Platform Admin",
+            EmailConfirmed = true,
+            TenantId = null
         };
-        var result = await userManager.CreateAsync(admin, adminPassword);
+        var result = await userManager.CreateAsync(superAdmin, superAdminPassword);
         if (result.Succeeded)
-            await userManager.AddToRoleAsync(admin, "Admin");
+            await userManager.AddToRoleAsync(superAdmin, "SuperAdmin");
+    }
+
+    // Migrate the old admin user: if it exists and has no role upgrade, ensure it stays as-is
+    var oldAdminEmail = Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? "admin@pharmacare.com";
+    var oldAdmin = await userManager.FindByEmailAsync(oldAdminEmail);
+    if (oldAdmin != null && !await userManager.IsInRoleAsync(oldAdmin, "SuperAdmin"))
+    {
+        if (!await userManager.IsInRoleAsync(oldAdmin, "Admin"))
+            await userManager.AddToRoleAsync(oldAdmin, "Admin");
     }
 }
 
